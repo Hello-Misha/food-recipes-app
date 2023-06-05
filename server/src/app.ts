@@ -61,4 +61,18 @@ app.get("/api/v1/items", (req: Request, res: Response) => {
   res.json({ items });
 });
 
+//DELETE
+
+app.delete("/api/v1/items/:id", (req: Request, res: Response) => {
+  const itemId: string = req.params.id;
+  const item: number = items.findIndex((item) => item.id === itemId);
+
+  if (item === -1) {
+    return res.status(404).json({ message: "Resource not found" });
+  }
+
+  items.splice(item, 1);
+  res.sendStatus(204);
+});
+
 export { app };
