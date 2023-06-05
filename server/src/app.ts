@@ -44,6 +44,8 @@ app.post("/api/v1/items", (req: Request, res: Response) => {
   res.status(201).json(newItem);
 });
 
+//GET
+
 app.get("/api/v1/items/:id", (req: Request, res: Response) => {
   const itemId: string = req.params.id;
   const item: Item | undefined = items.find((item) => item.id === itemId);
@@ -53,6 +55,10 @@ app.get("/api/v1/items/:id", (req: Request, res: Response) => {
   }
 
   res.json(item);
+});
+
+app.get("/api/v1/items", (req: Request, res: Response) => {
+  res.json({ items });
 });
 
 export { app };
