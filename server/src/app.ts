@@ -74,4 +74,32 @@ app.delete("/api/v1/items/:id", (req: Request, res: Response) => {
   res.sendStatus(204);
 });
 
+// PATCH
+
+app.patch("/api/v1/items/:id", (req: Request, res: Response) => {
+  const itemId: string = req.params.id;
+  const item: Item | undefined = items.get(itemId);
+  if (!item) {
+    return res.status(404).json({ message: "Resource not found" });
+  }
+
+  const {
+    title,
+    description,
+    dueDate,
+  }: { title: string; description: string; dueDate?: number } = req.body;
+
+  if (title) {
+    item.title = title;
+  }
+  if (description) {
+    item.description = description;
+  }
+  if (dueDate) {
+    item.dueDate = dueDate;
+  }
+
+  res.sendStatus(200).json(item);
+});
+
 export { app };
