@@ -20,7 +20,7 @@ app.get("/alive", (req: Request, res: Response) => {
 
 // DATABASE SIMULATION
 
-const items: Item[] = [];
+const items: Map<string, Item> = new Map();
 
 //POST
 
@@ -40,15 +40,14 @@ app.post("/api/v1/items", (req: Request, res: Response) => {
     createdAt: Math.floor(Date.now() / 1000),
   };
 
-  items.push(newItem);
+  items.set(id, newItem);
   res.status(201).json(newItem);
 });
-
 //GET
 
 app.get("/api/v1/items/:id", (req: Request, res: Response) => {
   const itemId: string = req.params.id;
-  const item: Item | undefined = items.find((item) => item.id === itemId);
+  const item: Item | undefined = items.get(itemId);
 
   if (!item) {
     return res.status(404).json({ message: "Resource not found" });
@@ -58,20 +57,20 @@ app.get("/api/v1/items/:id", (req: Request, res: Response) => {
 });
 
 app.get("/api/v1/items", (req: Request, res: Response) => {
-  res.json({ items });
+  res.json({ items: Array.from(items.values()) });
 });
 
 //DELETE
 
 app.delete("/api/v1/items/:id", (req: Request, res: Response) => {
   const itemId: string = req.params.id;
-  const item: number = items.findIndex((item) => item.id === itemId);
+  const item: Item | undefined = items.get(itemId);
 
-  if (item === -1) {
+  if (!item) {
     return res.status(404).json({ message: "Resource not found" });
   }
 
-  items.splice(item, 1);
+  items.delete(itemId);
   res.sendStatus(204);
 });
 
