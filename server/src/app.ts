@@ -64,13 +64,12 @@ app.get("/api/v1/items", (req: Request, res: Response) => {
 
 app.delete("/api/v1/items/:id", (req: Request, res: Response) => {
   const itemId: string = req.params.id;
-  const item: Item | undefined = items.get(itemId);
+  const wasDeleted = items.delete(itemId);
 
-  if (!item) {
+  if (!wasDeleted) {
     return res.status(404).json({ message: "Resource not found" });
   }
 
-  items.delete(itemId);
   res.sendStatus(204);
 });
 
