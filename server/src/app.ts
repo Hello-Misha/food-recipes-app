@@ -5,8 +5,11 @@ interface Item {
   id: string;
   title: string;
   description: string;
-  dueDate?: number;
+  categories: string[];
+  ingredients: string[];
+  steps: string[];
   createdAt: number;
+  // updatedAt: number;
 }
 
 const app: Application = express();
@@ -28,16 +31,27 @@ app.post("/api/v1/items", (req: Request, res: Response) => {
   const {
     title,
     description,
-    dueDate,
-  }: { title: string; description: string; dueDate?: number } = req.body;
+    categories,
+    ingredients,
+    steps,
+  }: {
+    title: string;
+    description: string;
+    categories: string[];
+    ingredients: string[];
+    steps: string[];
+  } = req.body;
   const id = uuidv4();
 
   const newItem: Item = {
     id,
     title,
     description,
-    dueDate,
+    categories,
+    ingredients,
+    steps,
     createdAt: Math.floor(Date.now() / 1000),
+    // updatedAt: Math.floor(Date.now() / 1000),
   };
 
   items.set(id, newItem);
@@ -85,8 +99,16 @@ app.patch("/api/v1/items/:id", (req: Request, res: Response) => {
   const {
     title,
     description,
-    dueDate,
-  }: { title: string; description: string; dueDate?: number } = req.body;
+    categories,
+    ingredients,
+    steps,
+  }: {
+    title: string;
+    description: string;
+    categories: string[];
+    ingredients: string[];
+    steps: string[];
+  } = req.body;
 
   if (title) {
     item.title = title;
@@ -94,8 +116,14 @@ app.patch("/api/v1/items/:id", (req: Request, res: Response) => {
   if (description) {
     item.description = description;
   }
-  if (dueDate) {
-    item.dueDate = dueDate;
+  if (categories) {
+    item.categories = categories;
+  }
+  if (ingredients) {
+    item.ingredients = ingredients;
+  }
+  if (steps) {
+    item.steps = steps;
   }
 
   res.sendStatus(200).json(item);
