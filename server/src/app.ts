@@ -1,6 +1,6 @@
 import express, { Application, Request, Response } from "express";
 import { connectToDb } from "./db";
-import { Db, InsertOneResult, ObjectId } from "mongodb";
+import { Db, InsertOneResult, Collection, WithId, ObjectId } from "mongodb";
 interface Item {
   title: string;
   description: string;
@@ -68,8 +68,25 @@ async function startServer() {
 
     //GET
 
-    app.get("/api/v1/items", (req: Request, res: Response) => {
-      res.json({ items: Array.from(items.values()) });
+    app.get("/api/v1/items", async (req: Request, res: Response) => {
+      try {
+        const collection: Collection = db.collection("recipes");
+        const documents = await collection.find().toArray();
+
+        const recipes: Item[] = documents.map((recipe) => ({
+          title: recipe.title,
+          description: recipe.description,
+          categories: recipe.categories,
+          ingredients: recipe.ingredients,
+          steps: recipe.steps,
+          createdAt: recipe.createdAt,
+        }));
+
+        res.status(200).json(recipes);
+      } catch (error) {
+        console.error("Error creating item:", error);
+        res.status(500).json({ error: "Failed to get items" });
+      }
     });
 
     app.get("/api/v1/items/:id", (req: Request, res: Response) => {
