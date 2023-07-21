@@ -84,33 +84,45 @@ async function startServer() {
 
         res.status(200).json(recipes);
       } catch (error) {
-        console.error("Error creating item:", error);
+        console.error("Error getting items:", error);
         res.status(500).json({ error: "Failed to get items" });
       }
     });
 
-    app.get("/api/v1/items/:id", (req: Request, res: Response) => {
-      const itemId: string = req.params.id;
-      const item: Item | undefined = items.get(itemId);
-
-      if (!item) {
-        return res.status(404).json({ message: "Resource not found" });
+    app.get("/api/v1/items/:id", async (req: Request, res: Response) => {
+      if (ObjectId.isValid(req.params.id)) {
+        try {
+          const collection: Collection = db.collection("recipes");
+          const document = await collection.findOne({
+            _id: new ObjectId(req.params.id),
+          });
+          res.status(200).json(document);
+        } catch (error) {
+          console.error("Error getting item:", error);
+          res.status(500).json({ error: "Failed to get items" });
+        }
+      } else {
+        res.status(500).json({ error: "Not valid document ID" });
       }
-
-      res.json(item);
     });
 
     //DELETE
 
-    app.delete("/api/v1/items/:id", (req: Request, res: Response) => {
-      const itemId: string = req.params.id;
-      const wasDeleted = items.delete(itemId);
-
-      if (!wasDeleted) {
-        return res.status(404).json({ message: "Resource not found" });
+    app.delete("/api/v1/items/:id", async (req: Request, res: Response) => {
+      if (ObjectId.isValid(req.params.id)) {
+        try {
+          const collection: Collection = db.collection("recipes");
+          const document = await collection.deleteOne({
+            _id: new ObjectId(req.params.id),
+          });
+          res.status(200).json(document);
+        } catch (error) {
+          console.error("Error getting item:", error);
+          res.status(500).json({ error: "Failed to get items" });
+        }
+      } else {
+        res.status(500).json({ error: "Not valid document ID" });
       }
-
-      res.sendStatus(204);
     });
 
     // PATCH
