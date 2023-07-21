@@ -1,6 +1,6 @@
 import express, { Application, Request, Response } from "express";
 import { connectToDb } from "./db";
-import { Db, InsertOneResult, Collection, WithId, ObjectId } from "mongodb";
+import { Db, InsertOneResult, Collection, ObjectId } from "mongodb";
 interface Item {
   title: string;
   description: string;
@@ -117,8 +117,8 @@ async function startServer() {
           });
           res.status(200).json(document);
         } catch (error) {
-          console.error("Error getting item:", error);
-          res.status(500).json({ error: "Failed to get items" });
+          console.error("Error deleting item:", error);
+          res.status(500).json({ error: "Failed to delete item" });
         }
       } else {
         res.status(500).json({ error: "Not valid document ID" });
@@ -127,48 +127,65 @@ async function startServer() {
 
     // PATCH
 
-    app.patch("/api/v1/items/:id", (req: Request, res: Response) => {
-      const itemId: string = req.params.id;
-      const item: Item | undefined = items.get(itemId);
-      if (!item) {
-        return res.status(404).json({ message: "Resource not found" });
-      }
+    app.patch("/api/v1/items/:id", async (req: Request, res: Response) => {
+      if (ObjectId.isValid(req.params.id)) {
+        try {
+          const collection: Collection = db.collection("recipes");
+          const existingItem = await collection.findOne({
+            _id: new ObjectId(req.params.id),
+          });
 
-      const {
-        title,
-        description,
-        categories,
-        ingredients,
-        steps,
-      }: {
-        title: string;
-        description: string;
-        categories: string[];
-        ingredients: string[];
-        steps: string[];
-      } = req.body;
+          if (!existingItem) {
+            return res.status(404).json({ error: "Recipe not found" });
+          }
 
-      if (title) {
-        item.title = title;
-      }
-      if (description) {
-        item.description = description;
-      }
-      if (categories) {
-        item.categories = categories;
-      }
-      if (ingredients) {
-        item.ingredients = ingredients;
-      }
-      if (steps) {
-        item.steps = steps;
-      }
+          const {
+            title,
+            description,
+            categories,
+            ingredients,
+            steps,
+          }: {
+            title?: string;
+            description?: string;
+            categories?: string[];
+            ingredients?: string[];
+            steps?: string[];
+          } = req.body;
 
-      res.sendStatus(200).json(item);
+          const updatedFields: { [key: string]: any } = {};
+          if (title) {
+            updatedFields.title = title;
+          }
+          if (description) {
+            updatedFields.description = description;
+          }
+          if (categories) {
+            updatedFields.categories = categories;
+          }
+          if (ingredients) {
+            updatedFields.ingredients = ingredients;
+          }
+          if (steps) {
+            updatedFields.steps = steps;
+          }
+
+          const updateResult = await collection.updateOne(
+            { _id: new ObjectId(req.params.id) },
+            { $set: updatedFields }
+          );
+
+          res.status(200).json(updateResult);
+        } catch (error) {
+          console.error("Error updating item:", error);
+          res.status(500).json({ error: "Failed to update items" });
+        }
+      } else {
+        res.status(400).json({ error: "Not valid document ID" });
+      }
     });
   } catch (error) {
     console.error("Error connecting to the database:", error);
-    // Handle the error or exit the application gracefully
   }
 }
 startServer();
