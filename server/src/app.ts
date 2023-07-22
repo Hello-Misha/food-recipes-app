@@ -1,7 +1,7 @@
 import express, { Application, Request, Response } from "express";
 import { connectToDb } from "./db";
 import { Db, InsertOneResult, Collection, ObjectId } from "mongodb";
-interface Item {
+interface Recipe {
   title: string;
   description: string;
   categories: string[];
@@ -22,15 +22,13 @@ app.get("/alive", (req: Request, res: Response) => {
 
 // DATABASE SIMULATION
 
-const items: Map<string, Item> = new Map();
-
 async function startServer() {
   try {
     const db: Db = await connectToDb();
 
     //POST
 
-    app.post("/api/v1/items", async (req: Request, res: Response) => {
+    app.post("/api/v1/recipes", async (req: Request, res: Response) => {
       try {
         const {
           title,
@@ -46,7 +44,7 @@ async function startServer() {
           steps: string[];
         } = req.body;
 
-        const newItem: Item = {
+        const newRecipe: Recipe = {
           title,
           description,
           categories,
@@ -56,24 +54,25 @@ async function startServer() {
         };
         const result: InsertOneResult<any> = await db
           .collection("recipes")
-          .insertOne(newItem);
+          .insertOne(newRecipe);
         res
           .status(200)
           .json({ message: "recipe was added", postId: result.insertedId });
       } catch (error) {
-        console.error("Error creating item:", error);
-        res.status(500).json({ error: "Failed to create item" });
+        console.error("Error creating recipe:", error);
+        res.status(500).json({ error: "Failed to create recipe" });
       }
     });
 
     //GET
 
-    app.get("/api/v1/items", async (req: Request, res: Response) => {
+    app.get("/api/v1/recipes", async (req: Request, res: Response) => {
       try {
         const collection: Collection = db.collection("recipes");
         const documents = await collection.find().toArray();
 
-        const recipes: Item[] = documents.map((recipe) => ({
+        const recipes: Recipe[] = documents.map((recipe) => ({
+          id: recipe._id,
           title: recipe.title,
           description: recipe.description,
           categories: recipe.categories,
@@ -84,12 +83,12 @@ async function startServer() {
 
         res.status(200).json(recipes);
       } catch (error) {
-        console.error("Error getting items:", error);
-        res.status(500).json({ error: "Failed to get items" });
+        console.error("Error getting recipes:", error);
+        res.status(500).json({ error: "Failed to get recipes" });
       }
     });
 
-    app.get("/api/v1/items/:id", async (req: Request, res: Response) => {
+    app.get("/api/v1/recipes/:id", async (req: Request, res: Response) => {
       if (ObjectId.isValid(req.params.id)) {
         try {
           const collection: Collection = db.collection("recipes");
@@ -98,90 +97,88 @@ async function startServer() {
           });
           res.status(200).json(document);
         } catch (error) {
-          console.error("Error getting item:", error);
-          res.status(500).json({ error: "Failed to get items" });
+          console.error("Error getting recipe:", error);
+          res.status(400).json({ error: "Failed to get recipe" });
         }
       } else {
-        res.status(500).json({ error: "Not valid document ID" });
+        res.status(400).json({ error: "Not valid document ID" });
       }
     });
 
     //DELETE
 
-    app.delete("/api/v1/items/:id", async (req: Request, res: Response) => {
-      if (ObjectId.isValid(req.params.id)) {
-        try {
-          const collection: Collection = db.collection("recipes");
-          const document = await collection.deleteOne({
-            _id: new ObjectId(req.params.id),
-          });
-          res.status(200).json(document);
-        } catch (error) {
-          console.error("Error deleting item:", error);
-          res.status(500).json({ error: "Failed to delete item" });
-        }
-      } else {
-        res.status(500).json({ error: "Not valid document ID" });
+    app.delete("/api/v1/recipes/:id", async (req: Request, res: Response) => {
+      if (!ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ error: "Not valid document ID" });
+      }
+      try {
+        const collection: Collection = db.collection("recipes");
+        const document = await collection.deleteOne({
+          _id: new ObjectId(req.params.id),
+        });
+        res.status(200).json(document);
+      } catch (error) {
+        console.error("Error deleting recipe:", error);
+        res.status(400).json({ error: "Failed to delete recipe" });
       }
     });
 
     // PATCH
 
-    app.patch("/api/v1/items/:id", async (req: Request, res: Response) => {
-      if (ObjectId.isValid(req.params.id)) {
-        try {
-          const collection: Collection = db.collection("recipes");
-          const existingItem = await collection.findOne({
-            _id: new ObjectId(req.params.id),
-          });
+    app.patch("/api/v1/recipe/:id", async (req: Request, res: Response) => {
+      if (!ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ error: "Not valid document ID" });
+      }
+      try {
+        const collection: Collection = db.collection("recipes");
+        const existingItem = await collection.findOne({
+          _id: new ObjectId(req.params.id),
+        });
 
-          if (!existingItem) {
-            return res.status(404).json({ error: "Recipe not found" });
-          }
-
-          const {
-            title,
-            description,
-            categories,
-            ingredients,
-            steps,
-          }: {
-            title?: string;
-            description?: string;
-            categories?: string[];
-            ingredients?: string[];
-            steps?: string[];
-          } = req.body;
-
-          const updatedFields: { [key: string]: any } = {};
-          if (title) {
-            updatedFields.title = title;
-          }
-          if (description) {
-            updatedFields.description = description;
-          }
-          if (categories) {
-            updatedFields.categories = categories;
-          }
-          if (ingredients) {
-            updatedFields.ingredients = ingredients;
-          }
-          if (steps) {
-            updatedFields.steps = steps;
-          }
-
-          const updateResult = await collection.updateOne(
-            { _id: new ObjectId(req.params.id) },
-            { $set: updatedFields }
-          );
-
-          res.status(200).json(updateResult);
-        } catch (error) {
-          console.error("Error updating item:", error);
-          res.status(500).json({ error: "Failed to update items" });
+        if (!existingItem) {
+          return res.status(404).json({ error: "Recipe not found" });
         }
-      } else {
-        res.status(400).json({ error: "Not valid document ID" });
+
+        const {
+          title,
+          description,
+          categories,
+          ingredients,
+          steps,
+        }: {
+          title?: string;
+          description?: string;
+          categories?: string[];
+          ingredients?: string[];
+          steps?: string[];
+        } = req.body;
+
+        const updatedFields: { [key: string]: any } = {};
+        if (title) {
+          updatedFields.title = title;
+        }
+        if (description) {
+          updatedFields.description = description;
+        }
+        if (categories) {
+          updatedFields.categories = categories;
+        }
+        if (ingredients) {
+          updatedFields.ingredients = ingredients;
+        }
+        if (steps) {
+          updatedFields.steps = steps;
+        }
+
+        const updateResult = await collection.updateOne(
+          { _id: new ObjectId(req.params.id) },
+          { $set: updatedFields }
+        );
+
+        res.status(200).json(updateResult);
+      } catch (error) {
+        console.error("Error updating recipe:", error);
+        res.status(500).json({ error: "Failed to update recipe" });
       }
     });
   } catch (error) {
