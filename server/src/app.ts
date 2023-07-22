@@ -1,15 +1,12 @@
 import express, { Application, Request, Response } from "express";
 import { connectToDb } from "./db";
 import { Db, InsertOneResult, Collection, ObjectId } from "mongodb";
-interface Recipe {
-  title: string;
-  description: string;
-  categories: string[];
-  ingredients: string[];
-  steps: string[];
-  createdAt: number;
-  // updatedAt: number;
-}
+import {
+  RecipePayload,
+  Recipe,
+  RecipePatchPayload,
+  RecipeCreateRequestPayload,
+} from "./recipe";
 
 const app: Application = express();
 
@@ -19,8 +16,6 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/alive", (req: Request, res: Response) => {
   res.send("Hello, World!").status(200);
 });
-
-// DATABASE SIMULATION
 
 async function startServer() {
   try {
@@ -36,15 +31,9 @@ async function startServer() {
           categories,
           ingredients,
           steps,
-        }: {
-          title: string;
-          description: string;
-          categories: string[];
-          ingredients: string[];
-          steps: string[];
-        } = req.body;
+        }: RecipeCreateRequestPayload = req.body;
 
-        const newRecipe: Recipe = {
+        const newRecipe: RecipePayload = {
           title,
           description,
           categories,
@@ -145,13 +134,7 @@ async function startServer() {
           categories,
           ingredients,
           steps,
-        }: {
-          title?: string;
-          description?: string;
-          categories?: string[];
-          ingredients?: string[];
-          steps?: string[];
-        } = req.body;
+        }: RecipePatchPayload = req.body;
 
         const updatedFields: { [key: string]: any } = {};
         if (title) {
