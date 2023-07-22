@@ -182,7 +182,7 @@ async function startServer() {
       }
     });
   } catch (error) {
-    console.error("Error connecting to the database:", error);
+    console.error("Error connecting to the database:", process.exit(1));
   }
 }
 startServer();
