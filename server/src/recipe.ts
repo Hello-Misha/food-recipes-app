@@ -11,10 +11,9 @@ export interface Recipe {
   updatedAt?: number;
 }
 
-export interface RecipeCreateRequestPayload
-  extends Omit<Recipe, "id" | "updatedAt" | "createdAt"> {}
-
 export interface RecipePayload extends Omit<Recipe, "id" | "updatedAt"> {}
 
-export interface RecipePatchPayload
-  extends Partial<RecipeCreateRequestPayload> {}
+export interface RecipePatchPayload extends Partial<RecipePayload> {}
+
+export interface RecipeCreateRequestPayload
+  extends Omit<Recipe, "id" | "updatedAt" | "createdAt"> {}

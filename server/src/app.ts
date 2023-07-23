@@ -78,19 +78,18 @@ async function startServer() {
     });
 
     app.get("/api/v1/recipes/:id", async (req: Request, res: Response) => {
-      if (ObjectId.isValid(req.params.id)) {
-        try {
-          const collection: Collection = db.collection("recipes");
-          const document = await collection.findOne({
-            _id: new ObjectId(req.params.id),
-          });
-          res.status(200).json(document);
-        } catch (error) {
-          console.error("Error getting recipe:", error);
-          res.status(400).json({ error: "Failed to get recipe" });
-        }
-      } else {
+      if (!ObjectId.isValid(req.params.id)) {
         res.status(400).json({ error: "Not valid document ID" });
+      }
+      try {
+        const collection: Collection = db.collection("recipes");
+        const document = await collection.findOne({
+          _id: new ObjectId(req.params.id),
+        });
+        res.status(200).json(document);
+      } catch (error) {
+        console.error("Error getting recipe:", error);
+        res.status(400).json({ error: "Failed to get recipe" });
       }
     });
 
@@ -114,7 +113,7 @@ async function startServer() {
 
     // PATCH
 
-    app.patch("/api/v1/recipe/:id", async (req: Request, res: Response) => {
+    app.patch("/api/v1/recipes/:id", async (req: Request, res: Response) => {
       if (!ObjectId.isValid(req.params.id)) {
         return res.status(400).json({ error: "Not valid document ID" });
       }
@@ -123,7 +122,6 @@ async function startServer() {
         const existingItem = await collection.findOne({
           _id: new ObjectId(req.params.id),
         });
-
         if (!existingItem) {
           return res.status(404).json({ error: "Recipe not found" });
         }
