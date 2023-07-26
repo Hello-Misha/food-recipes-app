@@ -4,7 +4,7 @@ import {
   Recipe,
   RecipePatchPayload,
   RecipeCreateRequestPayload,
-} from "./Recipe";
+} from "../interfaces/Recipe";
 
 export interface RecipeRepositoryInterface {
   createRecipe(recipeData: RecipeCreateRequestPayload): Promise<ObjectId>;
