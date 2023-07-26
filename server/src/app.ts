@@ -6,7 +6,7 @@ import {
   Recipe,
   RecipePatchPayload,
   RecipeCreateRequestPayload,
-} from "./recipe";
+} from "./interfaces/Recipe";
 
 const app: Application = express();
 
