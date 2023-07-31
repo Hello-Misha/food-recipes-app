@@ -8,7 +8,7 @@ import {
   RecipeCreateRequestPayload,
 } from "./interfaces/Recipe";
 
-import { RecipesRepository } from "./repos/RecipeRepository";
+import { RecipesRepository } from "./repos/RecipeMongoRepository";
 
 const app: Application = express();
 
@@ -58,7 +58,6 @@ async function startServer() {
     app.get("/api/v1/recipes", async (req: Request, res: Response) => {
       try {
         const allRecipes = await recipesRepository.getAllRecipes();
-
         res.status(200).json(allRecipes);
       } catch (error) {
         console.error("Error getting recipes:", error);
