@@ -1,3 +1,7 @@
-import Hero from "./Hero/Hero";
+import Navbar from "./Navbar/Navbar";
+import Footer from "./Footer/Footer";
 
-export { Hero };
+import Hero from "./Hero/Hero";
+import CustomButton from "./UIElements/CustomButton";
+
+export { Navbar, Footer, Hero, CustomButton };
