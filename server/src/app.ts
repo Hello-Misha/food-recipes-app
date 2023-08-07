@@ -10,10 +10,18 @@ import {
 
 import { RecipesRepository } from "./repos/RecipeMongoRepository";
 
+import { recipeSchemas } from "./middleware/recipeSchema";
+import { recipeValidator } from "./middleware/recipeValidator";
+
 const app: Application = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const cors = require("cors");
+let bodyParser = require("body-parser");
+app.use(cors());
+app.use(bodyParser.json());
 
 app.get("/alive", (req: Request, res: Response) => {
   res.send("Hello, World!").status(200);
@@ -26,32 +34,22 @@ async function startServer() {
 
     //POST
 
-    app.post("/api/v1/recipes", async (req: Request, res: Response) => {
-      try {
-        const {
-          title,
-          description,
-          categories,
-          ingredients,
-          steps,
-        }: RecipeCreateRequestPayload = req.body;
+    app.post(
+      "/api/v1/recipes",
+      recipeValidator(recipeSchemas.recipePOST),
+      async (req: Request, res: Response) => {
+        try {
+          const newRecipeId = await recipesRepository.createRecipe(req.body);
 
-        const newRecipeId = await recipesRepository.createRecipe({
-          title,
-          description,
-          categories,
-          ingredients,
-          steps,
-        });
-
-        res
-          .status(201)
-          .json({ message: "Recipe created successfully", id: newRecipeId });
-      } catch (error) {
-        console.error("Error creating recipe:", error);
-        res.status(500).json({ error: "Failed to create recipe" });
+          res
+            .status(201)
+            .json({ message: "Recipe created successfully", id: newRecipeId });
+        } catch (error) {
+          console.error("Error creating recipe:", error);
+          res.status(500).json({ error: "Failed to create recipe" });
+        }
       }
-    });
+    );
 
     //GET
 
@@ -99,48 +97,27 @@ async function startServer() {
 
     // PATCH
 
-    app.patch("/api/v1/recipes/:id", async (req: Request, res: Response) => {
-      const recipeId = req.params.id;
-      if (!ObjectId.isValid(recipeId)) {
-        return res.status(400).json({ error: "Not valid document ID" });
+    app.patch(
+      "/api/v1/recipes/:id",
+      recipeValidator(recipeSchemas.recipePATCH),
+      async (req: Request, res: Response) => {
+        const recipeId = req.params.id;
+        if (!ObjectId.isValid(recipeId)) {
+          return res.status(400).json({ error: "Not valid document ID" });
+        }
+        try {
+          const updateResult = await recipesRepository.updateRecipe(
+            recipeId,
+            req.body
+          );
+
+          res.status(200).json(updateResult);
+        } catch (error) {
+          console.error("Error updating recipe:", error);
+          res.status(500).json({ error: "Failed to update recipe" });
+        }
       }
-      try {
-        const {
-          title,
-          description,
-          categories,
-          ingredients,
-          steps,
-        }: RecipePatchPayload = req.body;
-
-        const updatedFields: { [key: string]: any } = {};
-        if (title) {
-          updatedFields.title = title;
-        }
-        if (description) {
-          updatedFields.description = description;
-        }
-        if (categories) {
-          updatedFields.categories = categories;
-        }
-        if (ingredients) {
-          updatedFields.ingredients = ingredients;
-        }
-        if (steps) {
-          updatedFields.steps = steps;
-        }
-
-        const updateResult = await recipesRepository.updateRecipe(
-          recipeId,
-          updatedFields
-        );
-
-        res.status(200).json(updateResult);
-      } catch (error) {
-        console.error("Error updating recipe:", error);
-        res.status(500).json({ error: "Failed to update recipe" });
-      }
-    });
+    );
   } catch (error) {
     console.error("Error connecting to the database:", process.exit(1));
   }
