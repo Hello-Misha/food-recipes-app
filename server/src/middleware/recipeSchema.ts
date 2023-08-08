@@ -15,4 +15,7 @@ export const recipeSchemas = {
     ingredients: Joi.array().items(Joi.string()).optional(),
     steps: Joi.array().items(Joi.string()).optional(),
   }),
+  recipeDetail: {
+    id: Joi.string().required(),
+  },
 };

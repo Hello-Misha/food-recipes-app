@@ -17,7 +17,7 @@ export interface RecipeRepository {
   deleteRecipeById(id: string | ObjectId): Promise<boolean>;
 }
 
-export class RecipesRepository implements RecipeRepository {
+export class RecipeMongoRepository implements RecipeRepository {
   private collection: Collection;
 
   constructor(private db: Db) {

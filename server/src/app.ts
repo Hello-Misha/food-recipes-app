@@ -1,17 +1,12 @@
 import express, { Application, Request, Response } from "express";
 import { connectToDb } from "./db";
 import { Db, InsertOneResult, Collection, ObjectId } from "mongodb";
-import {
-  RecipePayload,
-  Recipe,
-  RecipePatchPayload,
-  RecipeCreateRequestPayload,
-} from "./interfaces/Recipe";
 
-import { RecipesRepository } from "./repos/RecipeMongoRepository";
+import { RecipeMongoRepository } from "./repos/RecipeMongoRepository";
 
 import { recipeSchemas } from "./middleware/recipeSchema";
 import { recipeValidator } from "./middleware/recipeValidator";
+import { RecipesController } from "./controllers/recipesController";
 
 const app: Application = express();
 
@@ -30,93 +25,33 @@ app.get("/alive", (req: Request, res: Response) => {
 async function startServer() {
   try {
     const db: Db = await connectToDb();
-    const recipesRepository = new RecipesRepository(db);
+    const recipesRepository = new RecipeMongoRepository(db);
+    const recipesController = new RecipesController(recipesRepository);
 
     //POST
 
     app.post(
       "/api/v1/recipes",
       recipeValidator(recipeSchemas.recipePOST),
-      async (req: Request, res: Response) => {
-        try {
-          const newRecipeId = await recipesRepository.createRecipe(req.body);
-
-          res
-            .status(201)
-            .json({ message: "Recipe created successfully", id: newRecipeId });
-        } catch (error) {
-          console.error("Error creating recipe:", error);
-          res.status(500).json({ error: "Failed to create recipe" });
-        }
-      }
+      recipesController.create
     );
 
     //GET
 
-    app.get("/api/v1/recipes", async (req: Request, res: Response) => {
-      try {
-        const allRecipes = await recipesRepository.getAllRecipes();
-        res.status(200).json(allRecipes);
-      } catch (error) {
-        console.error("Error getting recipes:", error);
-        res.status(500).json({ error: "Failed to get recipes" });
-      }
-    });
+    app.get("/api/v1/recipes", recipesController.getAll);
 
-    app.get("/api/v1/recipes/:id", async (req: Request, res: Response) => {
-      const recipeId = req.params.id;
-      if (!ObjectId.isValid(recipeId)) {
-        res.status(400).json({ error: "Not valid document ID" });
-      }
-      try {
-        const recipe = await recipesRepository.getRecipeById(recipeId);
-        res.status(200).json(recipe);
-      } catch (error) {
-        console.error("Error getting recipe:", error);
-        res.status(400).json({ error: "Failed to get recipe" });
-      }
-    });
+    app.get("/api/v1/recipes/:id", recipesController.getOne);
 
     //DELETE
 
-    app.delete("/api/v1/recipes/:id", async (req: Request, res: Response) => {
-      const recipeId = req.params.id;
-      if (!ObjectId.isValid(recipeId)) {
-        return res.status(400).json({ error: "Not valid document ID" });
-      }
-      try {
-        const recipeDeleted = await recipesRepository.deleteRecipeById(
-          recipeId
-        );
-        res.status(200).json(recipeDeleted);
-      } catch (error) {
-        console.error("Error deleting recipe:", error);
-        res.status(400).json({ error: "Failed to delete recipe" });
-      }
-    });
+    app.delete("/api/v1/recipes/:id", recipesController.deleteOne);
 
     // PATCH
 
     app.patch(
       "/api/v1/recipes/:id",
       recipeValidator(recipeSchemas.recipePATCH),
-      async (req: Request, res: Response) => {
-        const recipeId = req.params.id;
-        if (!ObjectId.isValid(recipeId)) {
-          return res.status(400).json({ error: "Not valid document ID" });
-        }
-        try {
-          const updateResult = await recipesRepository.updateRecipe(
-            recipeId,
-            req.body
-          );
-
-          res.status(200).json(updateResult);
-        } catch (error) {
-          console.error("Error updating recipe:", error);
-          res.status(500).json({ error: "Failed to update recipe" });
-        }
-      }
+      recipesController.update
     );
   } catch (error) {
     console.error("Error connecting to the database:", process.exit(1));
