@@ -15,7 +15,9 @@ export const recipeSchemas = {
     ingredients: Joi.array().items(Joi.string()).optional(),
     steps: Joi.array().items(Joi.string()).optional(),
   }),
-  recipeDetail: {
-    id: Joi.string().required(),
+  recipeDetails: {
+    _id: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .required(),
   },
 };

@@ -26,12 +26,8 @@ export class RecipesController {
     }
   };
   getOne = async (req: Request, res: Response) => {
-    const recipeId = req.params.id;
-    // if (!ObjectId.isValid(recipeId)) {
-    //   res.status(400).json({ error: "Not valid document ID" });
-    // }
     try {
-      const recipe = await this.recipesRepository.getRecipeById(recipeId);
+      const recipe = await this.recipesRepository.getRecipeById(req.params.id);
       res.status(200).json(recipe);
     } catch (error) {
       console.error("Error getting recipe:", error);
@@ -39,13 +35,9 @@ export class RecipesController {
     }
   };
   deleteOne = async (req: Request, res: Response) => {
-    const recipeId = req.params.id;
-    // if (!ObjectId.isValid(recipeId)) {
-    //   return res.status(400).json({ error: "Not valid document ID" });
-    // }
     try {
       const recipeDeleted = await this.recipesRepository.deleteRecipeById(
-        recipeId
+        req.params.id
       );
       res.status(200).json(recipeDeleted);
     } catch (error) {
@@ -54,13 +46,9 @@ export class RecipesController {
     }
   };
   update = async (req: Request, res: Response) => {
-    const recipeId = req.params.id;
-    // if (!ObjectId.isValid(recipeId)) {
-    //   return res.status(400).json({ error: "Not valid document ID" });
-    // }
     try {
       const updateResult = await this.recipesRepository.updateRecipe(
-        recipeId,
+        req.params.id,
         req.body
       );
 

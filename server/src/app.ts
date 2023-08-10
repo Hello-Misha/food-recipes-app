@@ -5,7 +5,10 @@ import { Db, InsertOneResult, Collection, ObjectId } from "mongodb";
 import { RecipeMongoRepository } from "./repos/RecipeMongoRepository";
 
 import { recipeSchemas } from "./middleware/recipeSchema";
-import { recipeValidator } from "./middleware/recipeValidator";
+import {
+  recipeBodyValidator,
+  recipeIdValidator,
+} from "./middleware/recipeValidator";
 import { RecipesController } from "./controllers/recipesController";
 
 const app: Application = express();
@@ -32,7 +35,7 @@ async function startServer() {
 
     app.post(
       "/api/v1/recipes",
-      recipeValidator(recipeSchemas.recipePOST),
+      recipeBodyValidator(recipeSchemas.recipePOST),
       recipesController.create
     );
 
@@ -40,17 +43,26 @@ async function startServer() {
 
     app.get("/api/v1/recipes", recipesController.getAll);
 
-    app.get("/api/v1/recipes/:id", recipesController.getOne);
+    app.get(
+      "/api/v1/recipes/:id",
+      recipeIdValidator(recipeSchemas.recipeDetails._id),
+      recipesController.getOne
+    );
 
     //DELETE
 
-    app.delete("/api/v1/recipes/:id", recipesController.deleteOne);
+    app.delete(
+      "/api/v1/recipes/:id",
+      recipeIdValidator(recipeSchemas.recipeDetails._id),
+      recipesController.deleteOne
+    );
 
     // PATCH
 
     app.patch(
       "/api/v1/recipes/:id",
-      recipeValidator(recipeSchemas.recipePATCH),
+      recipeIdValidator(recipeSchemas.recipeDetails._id),
+      recipeBodyValidator(recipeSchemas.recipePATCH),
       recipesController.update
     );
   } catch (error) {
