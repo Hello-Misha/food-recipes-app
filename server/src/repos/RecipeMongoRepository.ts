@@ -1,19 +1,18 @@
 import { Db, Collection, InsertOneResult, ObjectId } from "mongodb";
-import {
-  RecipePayload,
-  Recipe,
-  RecipePatchPayload,
-  RecipeCreateRequestPayload,
-} from "../interfaces/Recipe";
+// import {
+//   RecipePayload,
+//   Recipe,
+//   RecipePatchPayload,
+//   RecipeCreateRequestPayload,
+// } from "../interfaces/Recipe";
+
+import RecipeModel, { Recipe } from "../models/Recipe";
 
 export interface RecipeRepository {
-  createRecipe(recipeData: RecipeCreateRequestPayload): Promise<ObjectId>;
+  createRecipe(recipeData: Recipe): Promise<Recipe>;
   getAllRecipes(): Promise<Recipe[]>;
   getRecipeById(id: string | ObjectId): Promise<Recipe | null>;
-  updateRecipe(
-    id: string | ObjectId,
-    updatedRecipe: RecipePatchPayload
-  ): Promise<boolean>;
+  updateRecipe(id: string | ObjectId, updatedRecipe: Recipe): Promise<boolean>;
   deleteRecipeById(id: string | ObjectId): Promise<boolean>;
 }
 
