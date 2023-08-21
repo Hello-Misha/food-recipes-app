@@ -1,6 +1,5 @@
-import Joi, { ValidationResult, string } from "joi";
+import Joi from "joi";
 import { Request, Response, NextFunction } from "express";
-// import { ObjectId } from "mongodb";
 
 export function recipeBodyValidator(schema: Joi.ObjectSchema) {
   return (req: Request, res: Response, next: NextFunction) => {

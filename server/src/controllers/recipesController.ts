@@ -31,24 +31,30 @@ export class RecipesController {
       res.status(200).json(recipe);
     } catch (error) {
       console.error("Error getting recipe:", error);
-      res.status(400).json({ error: "Failed to get recipe" });
+      res.status(500).json({ error: "Failed to get recipe" });
     }
   };
   deleteOne = async (req: Request, res: Response) => {
+    const recipeId = req.params.id;
+
     try {
       const recipeDeleted = await this.recipesRepository.deleteRecipeById(
-        req.params.id
+        recipeId
       );
       res.status(200).json(recipeDeleted);
     } catch (error) {
       console.error("Error deleting recipe:", error);
-      res.status(400).json({ error: "Failed to delete recipe" });
+      res.status(500).json({ error: "Failed to delete recipe" });
     }
   };
   update = async (req: Request, res: Response) => {
+    const recipeId = req.params.id;
+    // if (!ObjectId.isValid(recipeId)) {
+    //   return res.status(400).json({ error: "Not valid document ID" });
+    // }
     try {
       const updateResult = await this.recipesRepository.updateRecipe(
-        req.params.id,
+        recipeId,
         req.body
       );
 
