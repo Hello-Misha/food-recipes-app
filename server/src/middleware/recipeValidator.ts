@@ -17,16 +17,16 @@ export function recipeBodyValidator(schema: Joi.ObjectSchema) {
   };
 }
 
-export function recipeIdValidator(schema: Joi.StringSchema) {
+export function recipePathParamsValidator(schema: Joi.ObjectSchema) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const { error } = schema.validate(req.params.id);
+    const { error } = schema.validate(req.params);
     if (!error) {
       next();
     } else {
       const errorMessage = error.details
         .map((detail) => detail.message)
         .join(", ");
-      console.error("Invalid recipe ID:", errorMessage);
+      console.error("Invalid path parameters:", errorMessage);
       res.status(422).json({ error: errorMessage });
     }
   };

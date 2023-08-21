@@ -49,9 +49,6 @@ export class RecipesController {
   };
   update = async (req: Request, res: Response) => {
     const recipeId = req.params.id;
-    // if (!ObjectId.isValid(recipeId)) {
-    //   return res.status(400).json({ error: "Not valid document ID" });
-    // }
     try {
       const updateResult = await this.recipesRepository.updateRecipe(
         recipeId,

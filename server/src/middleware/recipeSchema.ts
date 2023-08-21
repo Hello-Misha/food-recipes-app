@@ -1,4 +1,5 @@
 import Joi from "joi";
+const { ObjectId } = require("mongodb");
 
 export const recipeSchemas = {
   recipePOST: Joi.object().keys({
@@ -15,9 +16,12 @@ export const recipeSchemas = {
     ingredients: Joi.array().items(Joi.string()).optional(),
     steps: Joi.array().items(Joi.string()).optional(),
   }),
-  recipeDetails: {
-    _id: Joi.string()
-      .regex(/^[0-9a-fA-F]{24}$/)
-      .required(),
-  },
+  recipeDetails: Joi.object({
+    id: Joi.string().custom((value, helpers) => {
+      if (!ObjectId.isValid(value)) {
+        return helpers.message({ custom: "ObjectId Validation" });
+      }
+      return value;
+    }),
+  }),
 };

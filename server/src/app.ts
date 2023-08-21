@@ -7,7 +7,7 @@ import { RecipeMongoRepository } from "./repos/RecipeMongoRepository";
 import { recipeSchemas } from "./middleware/recipeSchema";
 import {
   recipeBodyValidator,
-  recipeIdValidator,
+  recipePathParamsValidator,
 } from "./middleware/recipeValidator";
 import { RecipesController } from "./controllers/recipesController";
 
@@ -45,7 +45,7 @@ async function startServer() {
 
     app.get(
       "/api/v1/recipes/:id",
-      recipeIdValidator(recipeSchemas.recipeDetails._id),
+      recipePathParamsValidator(recipeSchemas.recipeDetails),
       recipesController.getOne
     );
 
@@ -53,7 +53,7 @@ async function startServer() {
 
     app.delete(
       "/api/v1/recipes/:id",
-      recipeIdValidator(recipeSchemas.recipeDetails._id),
+      recipePathParamsValidator(recipeSchemas.recipeDetails),
       recipesController.deleteOne
     );
 
@@ -61,7 +61,7 @@ async function startServer() {
 
     app.patch(
       "/api/v1/recipes/:id",
-      recipeIdValidator(recipeSchemas.recipeDetails._id),
+      recipePathParamsValidator(recipeSchemas.recipeDetails),
       recipeBodyValidator(recipeSchemas.recipePATCH),
       recipesController.update
     );
