@@ -10,6 +10,7 @@ import {
   recipePathParamsValidator,
 } from "./middleware/recipeValidator";
 import { RecipesController } from "./controllers/recipesController";
+import { RecipeMapRepository } from "./repos/RecipeMapRepository";
 
 const app: Application = express();
 
@@ -28,8 +29,22 @@ app.get("/alive", (req: Request, res: Response) => {
 async function startServer() {
   try {
     const db: Db = await connectToDb();
-    const recipesRepository = new RecipeMongoRepository(db);
-    const recipesController = new RecipesController(recipesRepository);
+    const recipesMongoRepository = new RecipeMongoRepository(db);
+    const recipesMapRepository = new RecipeMapRepository();
+    let recipesController: RecipesController;
+    switch (process.env.DB_TYPE) {
+      case "mongo": {
+        recipesController = new RecipesController(recipesMongoRepository);
+        break;
+      }
+      case "map": {
+        recipesController = new RecipesController(recipesMapRepository);
+        break;
+      }
+      default: {
+        throw new Error(`unknown db type provided: ${process.env.DB_TYPE}`);
+      }
+    }
 
     //POST
 

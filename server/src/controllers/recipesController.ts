@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { RecipeMongoRepository } from "../repos/RecipeMongoRepository";
+import { RecipeRepository } from "../repos/RecipeRepository";
 
 export class RecipesController {
-  constructor(private readonly recipesRepository: RecipeMongoRepository) {}
+  constructor(private readonly recipesRepository: RecipeRepository) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
     try {
