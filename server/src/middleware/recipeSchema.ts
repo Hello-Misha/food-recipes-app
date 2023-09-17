@@ -1,5 +1,5 @@
 import Joi from "joi";
-const { ObjectId } = require("mongodb");
+import { ObjectId } from "mongodb";
 
 export const recipeSchemas = {
   recipePOST: Joi.object().keys({

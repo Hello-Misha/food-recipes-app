@@ -1,5 +1,4 @@
 import { ObjectId } from "mongodb";
-// import { v4 as uuidv4 } from "uuid";
 
 import {
   RecipeCreateRequestPayload,
@@ -8,9 +7,9 @@ import {
 } from "../interfaces/Recipe";
 import { RecipeRepository } from "./RecipeRepository";
 
-const recipeMap: Map<string, Recipe> = new Map();
-
 export class RecipeMapRepository implements RecipeRepository {
+  private recipeMap: Map<string, Recipe> = new Map();
+
   async createRecipe(
     recipeData: RecipeCreateRequestPayload
   ): Promise<ObjectId> {
@@ -20,18 +19,18 @@ export class RecipeMapRepository implements RecipeRepository {
       ...recipeData,
       createdAt: Math.floor(Date.now() / 1000),
     };
-    recipeMap.set(id.toHexString(), newRecipe);
+    this.recipeMap.set(id.toHexString(), newRecipe);
     return id;
   }
 
   async getAllRecipes(): Promise<Recipe[]> {
-    const recipes = Array.from(recipeMap.values());
+    const recipes = Array.from(this.recipeMap.values());
     return recipes;
   }
 
   async getRecipeById(id: string | ObjectId): Promise<Recipe | null> {
     const recipeId = id instanceof ObjectId ? id.toHexString() : id;
-    const recipe = recipeMap.get(recipeId);
+    const recipe = this.recipeMap.get(recipeId);
     return recipe || null;
   }
 
@@ -40,20 +39,20 @@ export class RecipeMapRepository implements RecipeRepository {
     updatedRecipe: RecipePatchPayload
   ): Promise<boolean> {
     const recipeId = id instanceof ObjectId ? id.toHexString() : id;
-    const existingRecipe = recipeMap.get(recipeId);
+    const existingRecipe = this.recipeMap.get(recipeId);
 
     if (!existingRecipe) {
       return false;
     }
 
     const updatedRecipeData = { ...existingRecipe, ...updatedRecipe };
-    recipeMap.set(recipeId, updatedRecipeData);
+    this.recipeMap.set(recipeId, updatedRecipeData);
     return true;
   }
 
   async deleteRecipeById(id: string | ObjectId): Promise<boolean> {
     const recipeId = id instanceof ObjectId ? id.toHexString() : id;
-    const deleted = recipeMap.delete(recipeId);
+    const deleted = this.recipeMap.delete(recipeId);
     return deleted;
   }
 }
