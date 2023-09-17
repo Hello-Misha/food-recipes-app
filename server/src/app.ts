@@ -1,19 +1,26 @@
 import express, { Application, Request, Response } from "express";
 import { connectToDb } from "./db";
 import { Db, InsertOneResult, Collection, ObjectId } from "mongodb";
-import {
-  RecipePayload,
-  Recipe,
-  RecipePatchPayload,
-  RecipeCreateRequestPayload,
-} from "./interfaces/Recipe";
 
-import { RecipesRepository } from "./repos/RecipeMongoRepository";
+import { RecipeMongoRepository } from "./repos/RecipeMongoRepository";
+
+import { recipeSchemas } from "./middleware/recipeSchema";
+import {
+  recipeBodyValidator,
+  recipePathParamsValidator,
+} from "./middleware/recipeValidator";
+import { RecipesController } from "./controllers/recipesController";
+import { RecipeMapRepository } from "./repos/RecipeMapRepository";
 
 const app: Application = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const cors = require("cors");
+let bodyParser = require("body-parser");
+app.use(cors());
+app.use(bodyParser.json());
 
 app.get("/alive", (req: Request, res: Response) => {
   res.send("Hello, World!").status(200);
@@ -22,125 +29,57 @@ app.get("/alive", (req: Request, res: Response) => {
 async function startServer() {
   try {
     const db: Db = await connectToDb();
-    const recipesRepository = new RecipesRepository(db);
+    const recipesMongoRepository = new RecipeMongoRepository(db);
+    const recipesMapRepository = new RecipeMapRepository();
+    let recipesController: RecipesController;
+    switch (process.env.DB_TYPE) {
+      case "mongo": {
+        recipesController = new RecipesController(recipesMongoRepository);
+        break;
+      }
+      case "map": {
+        recipesController = new RecipesController(recipesMapRepository);
+        break;
+      }
+      default: {
+        throw new Error(`unknown db type provided: ${process.env.DB_TYPE}`);
+      }
+    }
 
     //POST
 
-    app.post("/api/v1/recipes", async (req: Request, res: Response) => {
-      try {
-        const {
-          title,
-          description,
-          categories,
-          ingredients,
-          steps,
-        }: RecipeCreateRequestPayload = req.body;
-
-        const newRecipeId = await recipesRepository.createRecipe({
-          title,
-          description,
-          categories,
-          ingredients,
-          steps,
-        });
-
-        res
-          .status(201)
-          .json({ message: "Recipe created successfully", id: newRecipeId });
-      } catch (error) {
-        console.error("Error creating recipe:", error);
-        res.status(500).json({ error: "Failed to create recipe" });
-      }
-    });
+    app.post(
+      "/api/v1/recipes",
+      recipeBodyValidator(recipeSchemas.recipePOST),
+      recipesController.create
+    );
 
     //GET
 
-    app.get("/api/v1/recipes", async (req: Request, res: Response) => {
-      try {
-        const allRecipes = await recipesRepository.getAllRecipes();
-        res.status(200).json(allRecipes);
-      } catch (error) {
-        console.error("Error getting recipes:", error);
-        res.status(500).json({ error: "Failed to get recipes" });
-      }
-    });
+    app.get("/api/v1/recipes", recipesController.getAll);
 
-    app.get("/api/v1/recipes/:id", async (req: Request, res: Response) => {
-      const recipeId = req.params.id;
-      if (!ObjectId.isValid(recipeId)) {
-        res.status(400).json({ error: "Not valid document ID" });
-      }
-      try {
-        const recipe = await recipesRepository.getRecipeById(recipeId);
-        res.status(200).json(recipe);
-      } catch (error) {
-        console.error("Error getting recipe:", error);
-        res.status(400).json({ error: "Failed to get recipe" });
-      }
-    });
+    app.get(
+      "/api/v1/recipes/:id",
+      recipePathParamsValidator(recipeSchemas.recipeDetails),
+      recipesController.getOne
+    );
 
     //DELETE
 
-    app.delete("/api/v1/recipes/:id", async (req: Request, res: Response) => {
-      const recipeId = req.params.id;
-      if (!ObjectId.isValid(recipeId)) {
-        return res.status(400).json({ error: "Not valid document ID" });
-      }
-      try {
-        const recipeDeleted = await recipesRepository.deleteRecipeById(
-          recipeId
-        );
-        res.status(200).json(recipeDeleted);
-      } catch (error) {
-        console.error("Error deleting recipe:", error);
-        res.status(400).json({ error: "Failed to delete recipe" });
-      }
-    });
+    app.delete(
+      "/api/v1/recipes/:id",
+      recipePathParamsValidator(recipeSchemas.recipeDetails),
+      recipesController.deleteOne
+    );
 
     // PATCH
 
-    app.patch("/api/v1/recipes/:id", async (req: Request, res: Response) => {
-      const recipeId = req.params.id;
-      if (!ObjectId.isValid(recipeId)) {
-        return res.status(400).json({ error: "Not valid document ID" });
-      }
-      try {
-        const {
-          title,
-          description,
-          categories,
-          ingredients,
-          steps,
-        }: RecipePatchPayload = req.body;
-
-        const updatedFields: { [key: string]: any } = {};
-        if (title) {
-          updatedFields.title = title;
-        }
-        if (description) {
-          updatedFields.description = description;
-        }
-        if (categories) {
-          updatedFields.categories = categories;
-        }
-        if (ingredients) {
-          updatedFields.ingredients = ingredients;
-        }
-        if (steps) {
-          updatedFields.steps = steps;
-        }
-
-        const updateResult = await recipesRepository.updateRecipe(
-          recipeId,
-          updatedFields
-        );
-
-        res.status(200).json(updateResult);
-      } catch (error) {
-        console.error("Error updating recipe:", error);
-        res.status(500).json({ error: "Failed to update recipe" });
-      }
-    });
+    app.patch(
+      "/api/v1/recipes/:id",
+      recipePathParamsValidator(recipeSchemas.recipeDetails),
+      recipeBodyValidator(recipeSchemas.recipePATCH),
+      recipesController.update
+    );
   } catch (error) {
     console.error("Error connecting to the database:", process.exit(1));
   }

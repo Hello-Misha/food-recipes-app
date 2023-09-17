@@ -5,19 +5,8 @@ import {
   RecipePatchPayload,
   RecipeCreateRequestPayload,
 } from "../interfaces/Recipe";
-
-export interface RecipeRepository {
-  createRecipe(recipeData: RecipeCreateRequestPayload): Promise<ObjectId>;
-  getAllRecipes(): Promise<Recipe[]>;
-  getRecipeById(id: string | ObjectId): Promise<Recipe | null>;
-  updateRecipe(
-    id: string | ObjectId,
-    updatedRecipe: RecipePatchPayload
-  ): Promise<boolean>;
-  deleteRecipeById(id: string | ObjectId): Promise<boolean>;
-}
-
-export class RecipesRepository implements RecipeRepository {
+import { RecipeRepository } from "./RecipeRepository";
+export class RecipeMongoRepository implements RecipeRepository {
   private collection: Collection;
 
   constructor(private db: Db) {
