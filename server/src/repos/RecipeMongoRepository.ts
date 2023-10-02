@@ -70,23 +70,6 @@ export class RecipeMongoRepository implements RecipeRepository {
     if (!existingRecipe) {
       return false;
     }
-    // const updatedFields: { [key: string]: any } = {};
-    // if (updatedRecipe.title) {
-    //   updatedFields.title = updatedRecipe.title;
-    // }
-    // if (updatedRecipe.description) {
-    //   updatedFields.description = updatedRecipe.description;
-    // }
-    // if (updatedRecipe.categories) {
-    //   updatedFields.categories = updatedRecipe.categories;
-    // }
-    // if (updatedRecipe.ingredients) {
-    //   updatedFields.ingredients = updatedRecipe.ingredients;
-    // }
-    // if (updatedRecipe.steps) {
-    //   updatedFields.steps = updatedRecipe.steps;
-    // }
-
     const updateResult = await this.collection.updateOne(
       { _id: objectId },
       { $set: updatedRecipe }
