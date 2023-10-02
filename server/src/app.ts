@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from "express";
+import { Db } from "mongodb";
 import { connectToDb } from "./db";
-import { Db, InsertOneResult, Collection, ObjectId } from "mongodb";
+import mongoose from "./db/mongoose";
 
 import { RecipeMongoRepository } from "./repos/RecipeMongoRepository";
 
